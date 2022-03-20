@@ -1,0 +1,101 @@
+
+(in trying to get the PC GPU for training to work, on Python 3.9.6)
+	ValueError: Using config_path to specify the config name is not supported, specify the config name via config_name.
+	See https://hydra.cc/docs/next/upgrades/011_to_1.0/config_path_changes
+
+		Downgrade hydra-core==1.0.1
+		open up the command window and type:
+		python -m pip install "hydra<1.1"
+
+
+STAGE 0 "data preparation"
+
+	IndexError: index 0 is out of bounds for axis 0 with size 0
+
+		too few files. Training Kit requires at least 13 segments. 
+		Segments are measured by how many pau labels there are.
+
+	ValueError: USTファイル名とLABファイル名がー？しませんでした。ファイル名を？？してください。
+		(the UST name and LAB name don't match. Please check the file name.)
+		
+		file names don't match. make sure file names are typed using the same language keyboards.
+
+	Exception: DBから生成したラベルと楽譜から生成したラベルに不整合があります。ログファイルを参照して修正して下さい
+	Exception: There is an inconsistency between labels generated from DB and labels generated from score. 
+	Please refer to the log file and fix it.
+		
+		make sure your LABs are on time with the USTs. 
+		If you use lab2ust, make sure you set the TEMPO of the empty UST BEFORE running the program.
+
+	Traceback (most recent call last):
+  		File "preprocess_data.py", line 82, in <module>
+    			main(argv[1].strip('"'))
+  		File "preprocess_data.py", line 51, in main
+    	compare_mono_align_and_mono_score.main(path_config_yaml)
+  		File "/content/enunu_training_kit-main/train/stage0/compare_mono_align_and_mono_score.py", line 206, in main
+    			if not phoneme_is_ok(path_mono_align, path_mono_score):
+  		File "/content/enunu_training_kit-main/train/stage0/compare_mono_align_and_mono_score.py", line 32, in phoneme_is_ok
+    			mono_score_label = up.label.load(path_mono_score_lab)
+  		File "/usr/local/lib/python3.7/dist-packages/utaupy/label.py", line 76, in load
+    			phoneme.symbol = v[2]
+	IndexError: list index out of range
+		
+		cause: Some sort of invalid lyric in the ust. Probably something that's not in the hed.
+		for example, having "- あ" instead of just "あ"
+
+	AssertionError: USTファイル数(##)とLABファイル数(##)が一致しません
+	(AssertionError: The number of UST files (##) does not match the number of LAB files (##))
+
+
+STAGE 1 "feature preparation"
+
+	ValueError: Buffer has wrong number of dimensions (expected 1, got 2)
+
+		One or more of the .wav files is in stereo. Convert to mono
+
+	ValueError: operands could not be broadcast together with shapes (1583,1)(1537,1)
+
+		error was "li" on the ust and not "り" label was [l][i]
+
+
+STAGE 2 "time-lag model training"
+
+	OSError: [WinError 1455] The paging file is too small for the operation to complete.
+
+		reduce the num_workers in timelab to 2
+		(The file exists at: \train\conf\train\timelag\data\myconfig.yaml )
+
+	(in_dim)
+	RuntimeError:  mat1 and mat2 shapes cannot be multiplied (1216x322 and 221x128)
+
+		Updated hed caused a mismatched between the expected value. conf>train>acoustic>model>.yaml switch the numeric values to the value the training wants
+
+STAGE 3 "duration model training"
+
+	(in_dim)
+	RuntimeError: input.size(-1) must be equal to input_size. Expected 221, got 322
+
+		Updated hed caused a mismatched between the expected value. conf>train>duration>model>.yaml switch the numeric values to the value the training wants
+
+STAGE 4 "training acoustic model"
+
+	(in_dim)
+	RuntimeError: Given groups=1, weight of size [128, 225, 7], expected input[8, 326, 4878] to have 225 channels, but got 326 channels instead 
+
+		Updated hed caused a mismatched between the expected value. conf>train>timelag>model>.yaml switch the numeric values to the value the training wants
+		
+
+STAGE 5 "Feature generation"
+
+STAGE 6 "waveform synthesis"
+
+STAGE 7 "Release preparation"
+
+	ModuleNotFoundError: No module named 'send2trash'
+
+		missing module "send2trash"
+		run in command terminal: 
+			pip install send2trash
+RELEASE.PY
+
+	pip install send2trash
